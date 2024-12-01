@@ -1,0 +1,60 @@
+# Binaries for programs and plugins
+*.dll
+*.so
+*.dylib
+
+# Test binary
+*.test
+
+# Output of the go coverage tool
+*.out
+
+# Dependency directories (vendor modules, etc.)
+/vendor/
+
+# Go workspace files
+go.work
+go.work.sum
+
+# IDE and editor files
+.vscode/
+*.code-workspace
+
+# Logs
+*.log
+
+# Build artifacts and cache
+/tmp/
+**/tmp/
+*.cache
+*.class
+
+# Go module files
+go.sum
+
+# IDE-specific backups or auto-generated files
+*.swp
+*.swo
+*.bak
+*~
+
+# Advent of Code specific: input and example files
+input.txt
+input*.txt
+example*.txt
+
+# Debugging and runtime files
+*.prof
+*.trace
+
+# Miscellaneous
+.DS_Store
+Thumbs.db
+.AppleDouble
+.LSOverride
+
+# macOS system files
+.DS_Store
+._*
+.Spotlight-V100
+.Trashes

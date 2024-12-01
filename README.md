@@ -26,13 +26,13 @@ Advent of Code is an annual coding event where participants solve daily programm
 ### Running a Solution
 Each day's solution is in its own directory under ./days/dayXX/. To run a solution:
    ```bash
-   go run days/day01/main.go
+   go run days/day01/solution.go days/day01/main.go
    ```
 
 ### Testing
 To run the tests for a specific day:
    ```bash
-   go test ./days/day01/...
+   go test ./days/day01/
    ```
 
 ## 📂 Project Structure
@@ -40,14 +40,16 @@ To run the tests for a specific day:
 advent-of-code-2024/
 ├── days/
 │   ├── day01/
-│   │   ├── main.go       # Solution for Day 1
-│   │   ├── input.txt     # Input data for Day 1
-│   │   └── example.txt   # Example input for testing
-│   └── dayXX/            # Solutions for subsequent days
-├── .gitignore            # Ignored files and directories
-├── go.mod                # Go module file
-├── go.sum                # Dependencies
-└── README.md             # Project documentation
+│   │   ├── main.go           # Main code
+│   │   ├── example_test.go   # Test of the example
+│   │   ├── solution.go       # Solution for Day 1
+│   │   ├── input.txt         # Input data for Day 1
+│   │   └── example.txt       # Example input for testing
+│   └── dayXX/                # Solutions for subsequent days
+├── .gitignore                # Ignored files and directories
+├── go.mod                    # Go module file
+├── go.sum                    # Dependencies
+└── README.md                 # Project documentation
 ```
 
 ## 🛠 Tools & Libraries

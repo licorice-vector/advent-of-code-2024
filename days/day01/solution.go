@@ -27,7 +27,7 @@ func computeDistance(A []int, B []int) int {
 	return dist
 }
 
-func solve(A []int, B []int) (int, error) {
+func solvePart1(A []int, B []int) (int, error) {
 	sort.Slice(A, func(i, j int) bool {
 		return A[i] < A[j]
 	})
@@ -43,6 +43,22 @@ func solve(A []int, B []int) (int, error) {
 	dist := computeDistance(A, B)
 
 	return dist, nil
+}
+
+func solvePart2(A []int, B []int) int {
+	freq := map[int]int{}
+
+	for _, value := range B {
+		freq[value]++
+	}
+
+	similarity := 0
+
+	for _, value := range A {
+		similarity += freq[value] * value
+	}
+
+	return similarity
 }
 
 func readInput(fileName string) ([]int, []int, error) {

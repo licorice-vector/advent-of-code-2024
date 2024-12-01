@@ -36,7 +36,7 @@ To run the tests for a specific day:
    ```
 
 ## 📂 Project Structure
-
+```
 advent-of-code-2024/
 ├── days/
 │   ├── day01/
@@ -48,6 +48,7 @@ advent-of-code-2024/
 ├── go.mod                # Go module file
 ├── go.sum                # Dependencies
 └── README.md             # Project documentation
+```
 
 ## 🛠 Tools & Libraries
 - Go: The primary programming language.

@@ -2,6 +2,13 @@ package main
 
 import "fmt"
 
+/*
+	Note to whoever may read this:
+		the problem is not well defined for part 2
+		an order might be impossible or there might be multiple orders
+		'luckily' there is a single unique order for the input
+*/
+
 func main() {
 	constraints, updates, err := readInput("input.txt")
 

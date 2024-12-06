@@ -69,6 +69,7 @@ advent-of-code-2024/
 | Day 3| ✅     | ✅     |
 | Day 4| ✅     | ✅     |
 | Day 5| ✅     | ✅     |
+| Day 6| ✅     | ❌     |
 | ...  |        |        |
 
 ## 🌟 Acknowledgments

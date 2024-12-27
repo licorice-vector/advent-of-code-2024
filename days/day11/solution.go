@@ -2,100 +2,100 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"runtime"
-	"sort"
 	"strconv"
 	"strings"
 )
 
-func abs(x int) int {
-    if x < 0 {
-        return -x
-    }
-    return x
+func updateStones(A map[int]int) map[int]int {
+	B := make(map[int]int)
+	for stone, count := range A {
+		if stone == 0 {
+			B[1] += count
+			continue
+		}
+		s := strconv.Itoa(stone)
+		if len(s) % 2 == 0 {
+			mid := len(s) / 2
+			l, _ := strconv.Atoi(s[:mid])
+			r, _ := strconv.Atoi(s[mid:])
+			B[l] += count
+			B[r] += count
+		} else {
+			B[stone * 2024] += count
+		}
+	}
+	return B
 }
 
-func computeDistance(A []int, B []int) int {
-	dist, n := 0, len(A)
-
-	for i := 0; i < n; i++ {
-		dist += abs(A[i] - B[i])
+func createFrequencyMap(stones []int) map[int]int {
+	freq := make(map[int]int)
+	for _, stone := range stones {
+		freq[stone]++
 	}
-
-	return dist
+	return freq
 }
 
-func solvePart1(A []int, B []int) (int, error) {
-	sort.Slice(A, func(i, j int) bool {
-		return A[i] < A[j]
-	})
-
-	sort.Slice(B, func(i, j int) bool {
-		return B[i] < B[j]
-	})
-
-	if len(A) != len(B) {
-		return 0, errors.New("slices are not of equal length")
+func countStones(freq map[int]int) int {
+	total := 0
+	for _, count := range freq {
+		total += count
 	}
-
-	dist := computeDistance(A, B)
-
-	return dist, nil
+	return total
 }
 
-func solvePart2(A []int, B []int) int {
-	freq := map[int]int{}
-
-	for _, value := range B {
-		freq[value]++
+func solvePart1(A []int) int {
+	B := createFrequencyMap(A)
+	for i := 0; i < 25; i++ {
+		B = updateStones(B)
 	}
-
-	similarity := 0
-
-	for _, value := range A {
-		similarity += freq[value] * value
-	}
-
-	return similarity
+	return countStones(B)
 }
 
-func readInput(fileName string) ([]int, []int, error) {
+func solvePart2(A []int) int {
+	B := createFrequencyMap(A)
+	for i := 0; i < 75; i++ {
+		B = updateStones(B)
+	}
+	return countStones(B)
+}
+
+func readInput(fileName string) ([]int, error) {
 	_, currentFile, _, ok := runtime.Caller(0)
-	
+
 	if !ok {
-		return nil, nil, errors.New("could not determine the current file")
+		return nil, errors.New("could not determine the current file")
 	}
-	
+
 	dir := filepath.Dir(currentFile)
 	filePath := filepath.Join(dir, fileName)
 
 	data, err := os.ReadFile(filePath)
-
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
-
-	var A, B []int
 
 	lines := strings.Split(string(data), "\n")
 
+	var result []int
+
 	for _, line := range lines {
-		if line == "" {
+		if strings.TrimSpace(line) == "" {
 			continue
 		}
 
 		parts := strings.Fields(line)
-
-		if len(parts) == 2 {
-			a, _ := strconv.Atoi(parts[0])
-			b, _ := strconv.Atoi(parts[1])
-
-			A = append(A, a)
-			B = append(B, b)
+		for _, part := range parts {
+			num, err := strconv.Atoi(part)
+			if err != nil {
+				return nil, fmt.Errorf("invalid number in input: %v", err)
+			}
+			result = append(result, num)
 		}
 	}
 
-	return A, B, nil
+	return result, nil
 }

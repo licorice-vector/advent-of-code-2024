@@ -2,24 +2,26 @@ package main
 
 import "fmt"
 
+func deepCopy(A [][]int) [][]int {
+	copyA := make([][]int, len(A))
+	for i := range A {
+		copyA[i] = make([]int, len(A[i]))
+		copy(copyA[i], A[i])
+	}
+	return copyA
+}
+
 func main() {
-	A, B, err := readInput("input.txt")
+	m, n, A, err := readInput("input.txt")
 
 	if err != nil {
 		fmt.Printf("Error when reading input: %v\n", err)
 		return
 	}
 
-	dist, err := solvePart1(A, B)
+	result := solvePart1(m, n, deepCopy(A))
 
-	if err != nil {
-		fmt.Printf("Error when solving part 1: %v\n", err)
-		return
-	}
+	fmt.Printf("Result: %d\n", result)
 
-	fmt.Printf("Distance: %d\n", dist)
-
-	similarity := solvePart2(A, B)
-
-	fmt.Printf("Similarity: %d\n", similarity)
+	solvePart2(m, n, A)
 }

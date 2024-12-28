@@ -4,68 +4,74 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"regexp"
 	"runtime"
-	"sort"
 	"strconv"
 	"strings"
 )
 
-func abs(x int) int {
-    if x < 0 {
-        return -x
+func solvePart1(A [][]int) int {
+	var cost = 0
+	for i := range A {
+		aX, aY, bX, bY, X, Y := A[i][0], A[i][1], A[i][2], A[i][3], A[i][4], A[i][5]
+		for a := 0; a <= 100; a++ {
+			x, y := aX * a, aY * a
+			xLeft, yLeft := X - x, Y - y
+			if xLeft % bX == 0 && yLeft % bY == 0 {
+				b := xLeft / bX
+				if yLeft / bY != b {
+					continue
+				}
+				cost += a * 3 + b
+			}
+		}
+	}
+	return cost
+}
+
+func solveEquations(aX, aY, bX, bY, X, Y int) (int, int, bool) {
+	det := aX * bY - aY * bX
+    
+    if det == 0 {
+        return 0, 0, false
     }
-    return x
-}
+    
+    a := bY * X - bX * Y
+    b := aX * Y - aY * X
 
-func computeDistance(A []int, B []int) int {
-	dist, n := 0, len(A)
-
-	for i := 0; i < n; i++ {
-		dist += abs(A[i] - B[i])
+	if a % det != 0 || b % det != 0 {
+		return 0, 0, false
 	}
 
-	return dist
+	a /= det
+	b /= det
+
+	if a < 0 || b < 0 {
+		return 0, 0, false
+	}
+    
+    return a, b, true
 }
 
-func solvePart1(A []int, B []int) (int, error) {
-	sort.Slice(A, func(i, j int) bool {
-		return A[i] < A[j]
-	})
-
-	sort.Slice(B, func(i, j int) bool {
-		return B[i] < B[j]
-	})
-
-	if len(A) != len(B) {
-		return 0, errors.New("slices are not of equal length")
+func solvePart2(A [][]int) int {
+	var cost = 0
+	for i := range A {
+		aX, aY, bX, bY, X, Y := A[i][0], A[i][1], A[i][2], A[i][3], A[i][4], A[i][5]
+		X += 10000000000000
+		Y += 10000000000000
+		a, b, found := solveEquations(aX, aY, bX, bY, X, Y)
+		if found {
+			cost += a * 3 + b
+		}
 	}
-
-	dist := computeDistance(A, B)
-
-	return dist, nil
+	return cost
 }
 
-func solvePart2(A []int, B []int) int {
-	freq := map[int]int{}
-
-	for _, value := range B {
-		freq[value]++
-	}
-
-	similarity := 0
-
-	for _, value := range A {
-		similarity += freq[value] * value
-	}
-
-	return similarity
-}
-
-func readInput(fileName string) ([]int, []int, error) {
+func readInput(fileName string) ([][]int, error) {
 	_, currentFile, _, ok := runtime.Caller(0)
 	
 	if !ok {
-		return nil, nil, errors.New("could not determine the current file")
+		return nil, errors.New("could not determine the current file")
 	}
 	
 	dir := filepath.Dir(currentFile)
@@ -74,28 +80,38 @@ func readInput(fileName string) ([]int, []int, error) {
 	data, err := os.ReadFile(filePath)
 
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
-	var A, B []int
-
+	var results [][]int
 	lines := strings.Split(string(data), "\n")
+	var block []int
+
+	re := regexp.MustCompile(`[+-]?\d+`)
 
 	for _, line := range lines {
+		line = strings.TrimSpace(line)
+
 		if line == "" {
+			if len(block) > 0 {
+				results = append(results, block)
+				block = nil
+			}
 			continue
 		}
 
-		parts := strings.Fields(line)
-
-		if len(parts) == 2 {
-			a, _ := strconv.Atoi(parts[0])
-			b, _ := strconv.Atoi(parts[1])
-
-			A = append(A, a)
-			B = append(B, b)
+		matches := re.FindAllString(line, -1)
+		for _, match := range matches {
+			num, err := strconv.Atoi(match)
+			if err == nil {
+				block = append(block, num)
+			}
 		}
 	}
 
-	return A, B, nil
+	if len(block) > 0 {
+		results = append(results, block)
+	}
+
+	return results, nil
 }

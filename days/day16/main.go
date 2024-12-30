@@ -3,23 +3,18 @@ package main
 import "fmt"
 
 func main() {
-	A, B, err := readInput("input.txt")
+	board, err := readInput("input.txt")
 
 	if err != nil {
 		fmt.Printf("Error when reading input: %v\n", err)
 		return
 	}
 
-	dist, err := solvePart1(A, B)
+	count := solvePart1(board)
 
-	if err != nil {
-		fmt.Printf("Error when solving part 1: %v\n", err)
-		return
-	}
+	fmt.Printf("Count for part 1: %d\n", count)
 
-	fmt.Printf("Distance: %d\n", dist)
+	count = solvePart2(board)
 
-	similarity := solvePart2(A, B)
-
-	fmt.Printf("Similarity: %d\n", similarity)
+	fmt.Printf("Count for part 2: %d\n", count)
 }

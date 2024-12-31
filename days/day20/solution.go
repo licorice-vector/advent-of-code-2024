@@ -5,8 +5,6 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
-	"sort"
-	"strconv"
 	"strings"
 )
 
@@ -17,85 +15,140 @@ func abs(x int) int {
     return x
 }
 
-func computeDistance(A []int, B []int) int {
-	dist, n := 0, len(A)
-
-	for i := 0; i < n; i++ {
-		dist += abs(A[i] - B[i])
+func bfs(A []string, startY, startX int) [][]int {
+	n, m := len(A), len(A[0])
+	const inf = int(1e9)
+	dist := make([][]int, n)
+	for i := range dist {
+		dist[i] = make([]int, m)
+		for j := range dist[i] {
+			dist[i][j] = inf
+		}
 	}
-
+	queue := [][2]int{{startY, startX}}
+	dist[startY][startX] = 0
+	
+	dirs := [][2]int{{-1, 0}, {1, 0}, {0, -1}, {0, 1}} // up, down, left, right
+	
+	for len(queue) > 0 {
+		y, x := queue[0][0], queue[0][1]
+		queue = queue[1:]
+		
+		for _, d := range dirs {
+			ny, nx := y + d[0], x + d[1]
+			if ny >= 0 && ny < n && nx >= 0 && nx < m && A[ny][nx] != '#' && dist[ny][nx] == inf {
+				dist[ny][nx] = dist[y][x] + 1
+				queue = append(queue, [2]int{ny, nx})
+			}
+		}
+	}
 	return dist
 }
 
-func solvePart1(A []int, B []int) (int, error) {
-	sort.Slice(A, func(i, j int) bool {
-		return A[i] < A[j]
-	})
+func solvePart1(A []string, threshold int) int {
+	n, m := len(A), len(A[0])
+	var srcX, srcY, dstX, dstY int
+	for i := 0; i < n; i++ {
+		for j := 0; j < m; j++ {
+			if A[i][j] == 'S' {
+				srcY, srcX = i, j
+			} else if A[i][j] == 'E' {
+				dstY, dstX = i, j
+			}
+		}
+	}
+	
+	distFromSrc := bfs(A, srcY, srcX)
+	distToDst := bfs(A, dstY, dstX)
+	dist := distFromSrc[dstY][dstX]
+	count := 0
 
-	sort.Slice(B, func(i, j int) bool {
-		return B[i] < B[j]
-	})
-
-	if len(A) != len(B) {
-		return 0, errors.New("slices are not of equal length")
+	for i := 1; i + 1 < n; i++ {
+		for j := 1; j + 1 < m; j++ {
+			if A[i][j] != '#' {
+				continue
+			}
+			if A[i - 1][j] != '#' && A[i + 1][j] != '#' {
+				if dist - (distFromSrc[i - 1][j] + 1 + distToDst[i + 1][j]) >= threshold {
+					count++
+				}
+				if dist - (distFromSrc[i + 1][j] + 1 + distToDst[i - 1][j]) >= threshold {
+					count++
+				}
+			}
+			if A[i][j - 1] != '#' && A[i][j + 1] != '#' {
+				if dist - (distFromSrc[i][j - 1] + 1 + distToDst[i][j + 1]) >= threshold {
+					count++
+				}
+				if dist - (distFromSrc[i][j + 1] + 1 + distToDst[i][j - 1]) >= threshold {
+					count++
+				}
+			}
+		}
 	}
 
-	dist := computeDistance(A, B)
-
-	return dist, nil
+	return count
 }
 
-func solvePart2(A []int, B []int) int {
-	freq := map[int]int{}
+func solvePart2(A []string, threshold int) int {
+	n, m := len(A), len(A[0])
+	var srcX, srcY, dstX, dstY int
+	for i := 0; i < n; i++ {
+		for j := 0; j < m; j++ {
+			if A[i][j] == 'S' {
+				srcY, srcX = i, j
+			} else if A[i][j] == 'E' {
+				dstY, dstX = i, j
+			}
+		}
+	}
+	
+	distFromSrc := bfs(A, srcY, srcX)
+	distToDst := bfs(A, dstY, dstX)
+	dist := distFromSrc[dstY][dstX]
+	count := 0
 
-	for _, value := range B {
-		freq[value]++
+	for y1 := 1; y1 + 1 < n; y1++ {
+		for x1 := 1; x1 + 1 < m; x1++ {
+			for y2 := 1; y2 + 1 < n; y2++ {
+				for x2 := 1; x2 + 1 < m; x2++ {
+					time := abs(x1 - x2) + abs(y1 - y2)
+					if time <= 20 {
+						if dist - (distFromSrc[y1][x1] + time + distToDst[y2][x2]) >= threshold {
+							count++
+						}
+					}
+				}
+			}
+		}
 	}
 
-	similarity := 0
-
-	for _, value := range A {
-		similarity += freq[value] * value
-	}
-
-	return similarity
+	return count
 }
 
-func readInput(fileName string) ([]int, []int, error) {
+func readInput(fileName string) ([]string, error) {
 	_, currentFile, _, ok := runtime.Caller(0)
-	
+
 	if !ok {
-		return nil, nil, errors.New("could not determine the current file")
+		return nil, errors.New("could not determine the current file")
 	}
-	
+
 	dir := filepath.Dir(currentFile)
 	filePath := filepath.Join(dir, fileName)
 
 	data, err := os.ReadFile(filePath)
-
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
-
-	var A, B []int
 
 	lines := strings.Split(string(data), "\n")
 
+	var result []string
 	for _, line := range lines {
-		if line == "" {
-			continue
-		}
-
-		parts := strings.Fields(line)
-
-		if len(parts) == 2 {
-			a, _ := strconv.Atoi(parts[0])
-			b, _ := strconv.Atoi(parts[1])
-
-			A = append(A, a)
-			B = append(B, b)
+		if strings.TrimSpace(line) != "" {
+			result = append(result, line)
 		}
 	}
 
-	return A, B, nil
+	return result, nil
 }

@@ -10,16 +10,11 @@ func main() {
 		return
 	}
 
-	dist, err := solvePart1(A, B)
+	result := solvePart1(A, B)
 
-	if err != nil {
-		fmt.Printf("Error when solving part 1: %v\n", err)
-		return
-	}
+	fmt.Printf("Result: %d\n", result)
 
-	fmt.Printf("Distance: %d\n", dist)
+	result = solvePart2(A, B)
 
-	similarity := solvePart2(A, B)
-
-	fmt.Printf("Similarity: %d\n", similarity)
+	fmt.Printf("Result: %d\n", result)
 }

@@ -5,80 +5,92 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
-	"sort"
 	"strconv"
 	"strings"
 )
 
-func abs(x int) int {
-    if x < 0 {
-        return -x
-    }
-    return x
-}
-
-func computeDistance(A []int, B []int) int {
-	dist, n := 0, len(A)
-
+func solvePart1(A [][]int, k int, n int) int {
+	board := make([][]int, n)
 	for i := 0; i < n; i++ {
-		dist += abs(A[i] - B[i])
+		board[i] = make([]int, n)
 	}
 
-	return dist
+	for i := 0; i < k; i++ {
+		x, y := A[i][0], A[i][1]
+		board[y][x] = 1
+	}
+
+	srcX, srcY := 0, 0
+	dstX, dstY := n - 1, n - 1
+
+	directions := [][]int{
+		{-1, 0}, {1, 0}, {0, -1}, {0, 1},
+	}
+
+	type Point struct {
+		x, y, dist int
+	}
+	queue := []Point{{srcX, srcY, 0}}
+	visited := make([][]bool, n)
+	for i := 0; i < n; i++ {
+		visited[i] = make([]bool, n)
+	}
+	visited[srcY][srcX] = true
+
+	for len(queue) > 0 {
+		current := queue[0]
+		queue = queue[1:]
+
+		if current.x == dstX && current.y == dstY {
+			return current.dist
+		}
+
+		for _, dir := range directions {
+			newX, newY := current.x+dir[0], current.y+dir[1]
+
+			if newX >= 0 && newX < n && newY >= 0 && newY < n &&
+				!visited[newY][newX] && board[newY][newX] == 0 {
+
+				visited[newY][newX] = true
+				queue = append(queue, Point{newX, newY, current.dist + 1})
+			}
+		}
+	}
+
+	return -1
 }
 
-func solvePart1(A []int, B []int) (int, error) {
-	sort.Slice(A, func(i, j int) bool {
-		return A[i] < A[j]
-	})
-
-	sort.Slice(B, func(i, j int) bool {
-		return B[i] < B[j]
-	})
-
-	if len(A) != len(B) {
-		return 0, errors.New("slices are not of equal length")
+func solvePart2(A [][]int, n int) []int {
+	l, r := 1, len(A)
+	for l < r {
+		m := l + (r - l) / 2
+		if solvePart1(A, m, n) == -1 {
+			r = m
+		} else {
+			l = m + 1
+		}
 	}
-
-	dist := computeDistance(A, B)
-
-	return dist, nil
+	if l == len(A) {
+		return []int{}
+	}
+	return A[l - 1]
 }
 
-func solvePart2(A []int, B []int) int {
-	freq := map[int]int{}
-
-	for _, value := range B {
-		freq[value]++
-	}
-
-	similarity := 0
-
-	for _, value := range A {
-		similarity += freq[value] * value
-	}
-
-	return similarity
-}
-
-func readInput(fileName string) ([]int, []int, error) {
+func readInput(fileName string) ([][]int, error) {
 	_, currentFile, _, ok := runtime.Caller(0)
-	
 	if !ok {
-		return nil, nil, errors.New("could not determine the current file")
+		return nil, errors.New("could not determine the current file")
 	}
-	
+
 	dir := filepath.Dir(currentFile)
 	filePath := filepath.Join(dir, fileName)
 
 	data, err := os.ReadFile(filePath)
-
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
-	var A, B []int
-
+	var pairs [][]int
 	lines := strings.Split(string(data), "\n")
 
 	for _, line := range lines {
@@ -86,16 +98,19 @@ func readInput(fileName string) ([]int, []int, error) {
 			continue
 		}
 
-		parts := strings.Fields(line)
-
-		if len(parts) == 2 {
-			a, _ := strconv.Atoi(parts[0])
-			b, _ := strconv.Atoi(parts[1])
-
-			A = append(A, a)
-			B = append(B, b)
+		parts := strings.Split(line, ",")
+		if len(parts) != 2 {
+			return nil, errors.New("invalid line format, expected pairs of numbers")
 		}
+		
+		num1, err1 := strconv.Atoi(strings.TrimSpace(parts[0]))
+		num2, err2 := strconv.Atoi(strings.TrimSpace(parts[1]))
+		if err1 != nil || err2 != nil {
+			return nil, errors.New("invalid number format")
+		}
+
+		pairs = append(pairs, []int{num1, num2})
 	}
 
-	return A, B, nil
+	return pairs, nil
 }

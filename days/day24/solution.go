@@ -5,65 +5,61 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
-	"sort"
-	"strconv"
 	"strings"
 )
 
-func abs(x int) int {
-    if x < 0 {
-        return -x
-    }
-    return x
-}
+func solve(A []string, s string) []int {
+	n := len(s)
+	dp := make([]int, n)
 
-func computeDistance(A []int, B []int) int {
-	dist, n := 0, len(A)
+	for _, t := range A {
+		m := len(t)
+		if m <= n && s[0:m] == t {
+			dp[m - 1] = 1
+		}
+	}
 
 	for i := 0; i < n; i++ {
-		dist += abs(A[i] - B[i])
+		if dp[i] == 0 {
+			continue
+		}
+		for _, t := range A {
+			m := len(t)
+			if i + m + 1 <= n && s[i + 1:i + m + 1] == t {
+				dp[i + m] += dp[i]
+			}
+		}
 	}
-
-	return dist
-}
-
-func solvePart1(A []int, B []int) (int, error) {
-	sort.Slice(A, func(i, j int) bool {
-		return A[i] < A[j]
-	})
-
-	sort.Slice(B, func(i, j int) bool {
-		return B[i] < B[j]
-	})
-
-	if len(A) != len(B) {
-		return 0, errors.New("slices are not of equal length")
-	}
-
-	dist := computeDistance(A, B)
-
-	return dist, nil
-}
-
-func solvePart2(A []int, B []int) int {
-	freq := map[int]int{}
-
-	for _, value := range B {
-		freq[value]++
-	}
-
-	similarity := 0
-
-	for _, value := range A {
-		similarity += freq[value] * value
-	}
-
-	return similarity
-}
-
-func readInput(fileName string) ([]int, []int, error) {
-	_, currentFile, _, ok := runtime.Caller(0)
 	
+	return dp
+}
+
+func solvePart1(A []string, B []string) int {
+	count := 0
+
+	for _, s := range B {
+		dp := solve(A, s)
+		if dp[len(s) - 1] != 0 {
+			count++
+		}
+	}
+
+	return count
+}
+
+func solvePart2(A []string, B []string) int {
+	count := 0
+
+	for _, s := range B {
+		dp := solve(A, s)
+		count += dp[len(s) - 1]
+	}
+
+	return count
+}
+
+func readInput(fileName string) ([]string, []string, error) {
+	_, currentFile, _, ok := runtime.Caller(0)
 	if !ok {
 		return nil, nil, errors.New("could not determine the current file")
 	}
@@ -72,30 +68,25 @@ func readInput(fileName string) ([]int, []int, error) {
 	filePath := filepath.Join(dir, fileName)
 
 	data, err := os.ReadFile(filePath)
-
 	if err != nil {
 		return nil, nil, err
 	}
 
-	var A, B []int
-
+	var list1, list2 []string
 	lines := strings.Split(string(data), "\n")
 
-	for _, line := range lines {
+	for i, line := range lines {
+		line = strings.TrimSpace(line)
 		if line == "" {
 			continue
 		}
 
-		parts := strings.Fields(line)
-
-		if len(parts) == 2 {
-			a, _ := strconv.Atoi(parts[0])
-			b, _ := strconv.Atoi(parts[1])
-
-			A = append(A, a)
-			B = append(B, b)
+		if i == 0 {
+			list1 = strings.Split(line, ", ")
+		} else {
+			list2 = append(list2, line)
 		}
 	}
 
-	return A, B, nil
+	return list1, list2, nil
 }

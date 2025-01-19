@@ -2,91 +2,111 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"runtime"
+	"strconv"
 	"strings"
 )
 
-func solve(A []string, s string) []int {
-	n := len(s)
-	dp := make([]int, n)
+func evolve(x int) int {
+	y := x * 64
+	x = x ^ y
+	x = x % 16777216
+	y = x / 32
+	x = x ^ y
+	x = x % 16777216
+	y = x * 2048
+	x = x ^ y
+	x = x % 16777216
+	return x
+}
 
-	for _, t := range A {
-		m := len(t)
-		if m <= n && s[0:m] == t {
-			dp[m - 1] = 1
+func solvePart1(A []int) int {
+	result := 0
+	n := 2000
+	for _, x := range A {
+		for i := 0; i < n; i++ {
+			x = evolve(x)
 		}
+		result += x
 	}
+	return result
+}
 
-	for i := 0; i < n; i++ {
-		if dp[i] == 0 {
-			continue
+func solvePart2(A []int) int {
+	prices := [][]int{}
+	changes := [][]int{}
+	for _, x := range A {
+		price := []int{}
+		change := []int{}
+		for i := 0; i < 2000; i++ {
+			a := x % 10
+			x = evolve(x)
+			b := x % 10
+			price = append(price, b)
+			change = append(change, b - a + 9)
 		}
-		for _, t := range A {
-			m := len(t)
-			if i + m + 1 <= n && s[i + 1:i + m + 1] == t {
-				dp[i + m] += dp[i]
+		prices = append(prices, price)
+		changes = append(changes, change)
+	}
+	var cost [19][19][19][19]int
+	for i, change := range changes {
+		var seen [19][19][19][19]int
+		for j := 0; j + 3 < len(change); j++ {
+			a, b, c, d := change[j], change[j + 1], change[j + 2], change[j + 3]
+			if seen[a][b][c][d] == 1 {
+				continue
 			}
+			seen[a][b][c][d] = 1
+			cost[a][b][c][d] += prices[i][j + 3]
 		}
 	}
-	
-	return dp
+	max := cost[0][0][0][0]
+    for i := 0; i < 19; i++ {
+        for j := 0; j < 19; j++ {
+            for k := 0; k < 19; k++ {
+                for l := 0; l < 19; l++ {
+                    if max < cost[i][j][k][l] {
+                        max = cost[i][j][k][l]
+                    }
+                }
+            }
+        }
+    }
+	return max
 }
 
-func solvePart1(A []string, B []string) int {
-	count := 0
-
-	for _, s := range B {
-		dp := solve(A, s)
-		if dp[len(s) - 1] != 0 {
-			count++
-		}
-	}
-
-	return count
-}
-
-func solvePart2(A []string, B []string) int {
-	count := 0
-
-	for _, s := range B {
-		dp := solve(A, s)
-		count += dp[len(s) - 1]
-	}
-
-	return count
-}
-
-func readInput(fileName string) ([]string, []string, error) {
+func readInput(fileName string) ([]int, error) {
 	_, currentFile, _, ok := runtime.Caller(0)
 	if !ok {
-		return nil, nil, errors.New("could not determine the current file")
+		return nil, errors.New("could not determine the current file")
 	}
-	
+
 	dir := filepath.Dir(currentFile)
 	filePath := filepath.Join(dir, fileName)
 
 	data, err := os.ReadFile(filePath)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
-	var list1, list2 []string
+	var list []int
 	lines := strings.Split(string(data), "\n")
 
-	for i, line := range lines {
+	for _, line := range lines {
 		line = strings.TrimSpace(line)
 		if line == "" {
 			continue
 		}
 
-		if i == 0 {
-			list1 = strings.Split(line, ", ")
-		} else {
-			list2 = append(list2, line)
+		num, err := strconv.Atoi(line)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse integer from line: %s", line)
 		}
+		list = append(list, num)
 	}
 
-	return list1, list2, nil
+	return list, nil
 }

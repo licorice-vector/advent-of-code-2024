@@ -5,63 +5,99 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"sort"
 	"strings"
 )
 
-func solve(A []string, s string) []int {
-	n := len(s)
-	dp := make([]int, n)
+func solvePart1(A []string) int {
+    adj := map[string][]string{}
+    for _, connection := range A {
+        u := connection[0:2]
+        v := connection[3:5]
+        adj[u] = append(adj[u], v)
+        adj[v] = append(adj[v], u)
+    }
 
-	for _, t := range A {
-		m := len(t)
-		if m <= n && s[0:m] == t {
-			dp[m - 1] = 1
-		}
-	}
+    tripleSet := make(map[string]bool)
 
-	for i := 0; i < n; i++ {
-		if dp[i] == 0 {
-			continue
-		}
-		for _, t := range A {
-			m := len(t)
-			if i + m + 1 <= n && s[i + 1:i + m + 1] == t {
-				dp[i + m] += dp[i]
-			}
-		}
-	}
-	
-	return dp
+    for a, neighbors := range adj {
+        for _, b := range neighbors {
+            if b <= a {
+                continue
+            }
+            for _, c := range adj[b] {
+                if c <= b || c == a {
+                    continue
+                }
+                for _, neighbor := range adj[a] {
+                    if neighbor == c {
+                        if a[0] != 't' && b[0] != 't' && c[0] != 't' {
+                            break
+                        }
+                        triangle := []string{a, b, c}
+                        sort.Strings(triangle)
+                        key := triangle[0] + triangle[1] + triangle[2]
+                        tripleSet[key] = true
+                        break
+                    }
+                }
+            }
+        }
+    }
+
+    return len(tripleSet)
 }
 
-func solvePart1(A []string, B []string) int {
-	count := 0
+func solvePart2(A []string) []string {
+	adj := map[string][]string{}
+    for _, connection := range A {
+        u := connection[0:2]
+        v := connection[3:5]
+        adj[u] = append(adj[u], v)
+        adj[v] = append(adj[v], u)
+    }
 
-	for _, s := range B {
-		dp := solve(A, s)
-		if dp[len(s) - 1] != 0 {
-			count++
-		}
-	}
+    var largestClique []string
+    var dfs func(current, candidates []string)
+    dfs = func(current, candidates []string) {
+        if len(candidates) == 0 {
+            if len(largestClique) < len(current) {
+                largestClique = append([]string{}, current...)
+            }
+            return
+        }
 
-	return count
+        for i, node := range candidates {
+            newCurrent := append(current, node)
+            newCandidates := []string{}
+            for _, neighbor := range candidates[i + 1:] {
+                for _, n := range adj[node] {
+                    if neighbor == n {
+                        newCandidates = append(newCandidates, neighbor)
+                        break
+                    }
+                }
+            }
+            dfs(newCurrent, newCandidates)
+        }
+    }
+
+    var allNodes []string
+    for node := range adj {
+        allNodes = append(allNodes, node)
+    }
+
+    sort.Strings(allNodes)
+    dfs([]string{}, allNodes)
+    sort.Strings(largestClique)
+
+    return largestClique
 }
 
-func solvePart2(A []string, B []string) int {
-	count := 0
-
-	for _, s := range B {
-		dp := solve(A, s)
-		count += dp[len(s) - 1]
-	}
-
-	return count
-}
-
-func readInput(fileName string) ([]string, []string, error) {
+func readInput(fileName string) ([]string, error) {
 	_, currentFile, _, ok := runtime.Caller(0)
 	if !ok {
-		return nil, nil, errors.New("could not determine the current file")
+		return nil, errors.New("could not determine the current file")
 	}
 	
 	dir := filepath.Dir(currentFile)
@@ -69,24 +105,20 @@ func readInput(fileName string) ([]string, []string, error) {
 
 	data, err := os.ReadFile(filePath)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
-	var list1, list2 []string
+	var list []string
 	lines := strings.Split(string(data), "\n")
 
-	for i, line := range lines {
+	for _, line := range lines {
 		line = strings.TrimSpace(line)
 		if line == "" {
 			continue
 		}
 
-		if i == 0 {
-			list1 = strings.Split(line, ", ")
-		} else {
-			list2 = append(list2, line)
-		}
+		list = append(list, line)
 	}
 
-	return list1, list2, nil
+	return list, nil
 }

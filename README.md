@@ -88,7 +88,7 @@ advent-of-code-2024/
 | Day 22| ✅     | ✅     |
 | Day 23| ✅     | ✅     |
 | Day 24| ✅     | ✅     |
-| Day 25| ❌     | ❌     |
+| Day 25| ✅     | ⭐     |
 
 ## 🌟 Acknowledgments
 Thanks to Eric Wastl for creating Advent of Code and providing an amazing way to challenge ourselves each year.
